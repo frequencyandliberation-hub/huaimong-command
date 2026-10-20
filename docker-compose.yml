@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: huaimong_postgis
+    environment:
+      POSTGRES_DB: huaimong_db
+      POSTGRES_USER: rid_admin
+      POSTGRES_PASSWORD: rid_password_change_in_production
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    restart: always
+
+  backend:
+    build: .
+    container_name: huaimong_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://rid_admin:rid_password_change_in_production@db:5432/huaimong_db
+      - ENVIRONMENT=production
+      - TZ=Asia/Bangkok
+    depends_on:
+      - db
+    volumes:
+      - ./data:/app/data
+    restart: always
+
+volumes:
+  postgis_data:
